@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 score = ARGV[0]
 scores = score.split(',')
 shots = []
@@ -16,9 +18,7 @@ shots.each_slice(2) do |s|
 end
 
 frames.each do |frame|
-  if frame == [10, 0]
-    frame.delete(0)
-  end
+  frame.delete(0) if frame == [10, 0]
 end
 
 strikes = []
@@ -38,13 +38,13 @@ end
 
 strike_points = []
 strikes.each do |strike|
-  if frames[strike] == [10]
-    if frames[strike + 1] == [10]
-      strike_points << (frames[strike + 1][0] + frames[strike + 2][0])
-    else
-      strike_points << frames[strike + 1].sum
-    end
-  end
+  strike_points << if frames[strike] == [10]
+                     if frames[strike + 1] == [10]
+                       frames[strike + 1][0] + frames[strike + 2][0]
+                     else
+                       frames[strike + 1].sum
+                     end
+                   end
 end
 
 spare_points = []
