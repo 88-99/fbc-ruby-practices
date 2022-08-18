@@ -13,13 +13,9 @@ scores.each do |s|
 end
 
 frames = []
-shots.each_slice(2) do |s|
-  frames << s
-end
+shots.each_slice(2) { |s| frames << s }
 
-frames.each do |frame|
-  frame.delete(0) if frame == [10, 0]
-end
+frames.each { |frame| frame.delete(0) if frame == [10, 0] }
 
 strikes = []
 spares = []
@@ -31,25 +27,18 @@ frames.first(9).each_with_index do |frame, i|
   end
 end
 
-basic_points = []
-frames.each do |frame|
-  basic_points << frame.sum
+basic_points = frames.map(&:sum)
+
+strike_points = strikes.map do |strike|
+  if frames[strike] == [10]
+    if frames[strike + 1] == [10]
+      frames[strike + 1][0] + frames[strike + 2][0]
+    else
+      frames[strike + 1].sum
+    end
+  end
 end
 
-strike_points = []
-strikes.each do |strike|
-  strike_points << if frames[strike] == [10]
-                     if frames[strike + 1] == [10]
-                       frames[strike + 1][0] + frames[strike + 2][0]
-                     else
-                       frames[strike + 1].sum
-                     end
-                   end
-end
-
-spare_points = []
-spares.each do |spare|
-  spare_points << (frames[spare + 1][0])
-end
+spare_points = spares.map { |spare| frames[spare + 1][0] }
 
 p (basic_points + strike_points + spare_points).sum
