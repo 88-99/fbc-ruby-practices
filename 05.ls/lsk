@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+
+files = []
+Dir.foreach('.') do |item|
+  next if item.match(/^\..*/)
+  files << item
+end
+
+files = files.sort
+file_lengths = []
+files.each do |file|
+  file_lengths << file.length
+end
+
+quotient, remainder = files.length.divmod(3)
+files_transposed =
+if (remainder) != 0
+(3 - remainder).times do
+  files << nil
+end
+  files.each_slice(quotient + 1).to_a.transpose
+else
+  files.each_slice(quotient).to_a.transpose
+end
+
+files_transposed.each do |column|
+  puts "#{column[0]}".ljust(file_lengths.max) + "    " +
+        "#{column[1]}".ljust(file_lengths.max) + "    " +
+        "#{column[2]}".ljust(file_lengths.max)
+end
