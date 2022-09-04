@@ -9,20 +9,27 @@ Dir.foreach('.') do |item|
 end
 
 files = files.sort
-file_lengths = []
+@file_lengths = []
 files.each do |file|
-  file_lengths << file.length
+  @file_lengths << file.length
+end
+def search_max_filename
+  @file_lengths.max
 end
 
-number_of_columns = 3
-n = number_of_columns - 1
-indexes = []
-1.upto(n) { |x| indexes << x }
+@number_of_columns = 3
+def make_special_index_array
+  indexes = []
+  1.upto(@number_of_columns - 1) do |x|
+    indexes << x
+  end
+  indexes
+end
 
-quotient, remainder = files.length.divmod(number_of_columns)
+quotient, remainder = files.length.divmod(@number_of_columns)
 files_transposed =
   if remainder != 0
-    (number_of_columns - remainder).times do
+    (@number_of_columns - remainder).times do
       files << nil
     end
     files.each_slice(quotient + 1).to_a.transpose
@@ -31,9 +38,9 @@ files_transposed =
   end
 
 files_transposed.each do |column|
-  column_array = [column[0].to_s.ljust(file_lengths.max)]
-  indexes.each do |i|
-    column_array << column[i].to_s.ljust(file_lengths.max)
+  column_array = [column[0].to_s.ljust(search_max_filename)]
+  make_special_index_array.each do |i|
+    column_array << column[i].to_s.ljust(search_max_filename)
   end
   puts column_array.join(' ' * 4)
 end
