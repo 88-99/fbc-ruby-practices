@@ -30,11 +30,9 @@ end
 def demand_max_characters_of_filename(filenames)
   filename_lengths = []
   filenames.each do |filename|
-    if filename.nil?
-      next
-    else
-      filename_lengths << filename.length
-    end
+    next if filename.nil?
+
+    filename_lengths << filename.length
   end
   filename_lengths.max
 end
