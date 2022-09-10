@@ -3,30 +3,46 @@
 
 NUMBER_OF_COLUMNS = 3
 
-indexes = []
-1.upto(NUMBER_OF_COLUMNS - 1) { |x| indexes << x }
+filenames = Dir.glob("[^\.]*")
 
-files = Dir.glob("[^\.]*")
-
-file_lengths = []
-files.each { |file| file_lengths << file.length }
-
-quotient, remainder = files.length.divmod(NUMBER_OF_COLUMNS)
-files_transposed =
-  if remainder != 0
-    (NUMBER_OF_COLUMNS - remainder).times do
-      files << nil
+def main(filenames)
+  quotient, remainder = filenames.length.divmod(NUMBER_OF_COLUMNS)
+  filenames_transposed =
+    if remainder != 0
+      (NUMBER_OF_COLUMNS - remainder).times do
+        filenames << nil
+      end
+      filenames.each_slice(quotient + 1).to_a.transpose
+    else
+      filenames.each_slice(quotient).to_a.transpose
     end
-    files.each_slice(quotient + 1).to_a.transpose
-  else
-    files.each_slice(quotient).to_a.transpose
-  end
 
-max_characters_of_filename = file_lengths.max
-files_transposed.each do |column|
-  columns = [column[0].to_s.ljust(max_characters_of_filename)]
-  indexes.each do |i|
-    columns << column[i].to_s.ljust(max_characters_of_filename)
+  max_characters_of_filename = demand_max_characters_of_filename(filenames)
+  filenames_transposed.each do |column|
+    columns = [column[0].to_s.ljust(max_characters_of_filename)]
+    demand_column_indexes.each do |i|
+      columns << column[i].to_s.ljust(max_characters_of_filename)
+    end
+    puts columns.join(' ' * 4)
   end
-  puts columns.join(' ' * 4)
 end
+
+def demand_max_characters_of_filename(filenames)
+  filename_lengths = []
+  filenames.each do |filename|
+    if filename.nil?
+      next
+    else
+      filename_lengths << filename.length
+    end
+  end
+  filename_lengths.max
+end
+
+def demand_column_indexes
+  indexes = []
+  1.upto(NUMBER_OF_COLUMNS - 1) { |x| indexes << x }
+  indexes
+end
+
+main(filenames)
