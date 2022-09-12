@@ -3,9 +3,9 @@
 
 NUMBER_OF_COLUMNS = 3
 
-filenames = Dir.glob("[^\.]*")
+def main
+  filenames = Dir.glob("[^\.]*")
 
-def main(filenames)
   quotient, remainder = filenames.length.divmod(NUMBER_OF_COLUMNS)
   filenames_transposed =
     if remainder != 0
@@ -43,4 +43,4 @@ def demand_column_indexes
   indexes
 end
 
-main(filenames)
+main
