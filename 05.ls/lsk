@@ -5,6 +5,42 @@ require 'optparse'
 
 NUMBER_OF_COLUMNS = 3
 
+def main
+  option = {}
+  OptionParser.new do |opt|
+    opt.on('-a') { |v| option[:a] = v }
+    opt.parse!(ARGV)
+  end
+
+  if option[:a]
+    filenames = []
+    Dir.foreach('.') { |f| filenames << f }
+    filenames = filenames.sort
+  else
+    filenames = Dir.glob("[^\.]*")
+  end
+
+  quotient, remainder = filenames.length.divmod(NUMBER_OF_COLUMNS)
+  filenames_transposed =
+    if remainder != 0
+      (NUMBER_OF_COLUMNS - remainder).times do
+        filenames << nil
+      end
+      filenames.each_slice(quotient + 1).to_a.transpose
+    else
+      filenames.each_slice(quotient).to_a.transpose
+    end
+
+  max_characters_of_filename = demand_max_characters_of_filename(filenames)
+  filenames_transposed.each do |column|
+    columns = [column[0].to_s.ljust(max_characters_of_filename)]
+    demand_column_indexes.each do |i|
+      columns << column[i].to_s.ljust(max_characters_of_filename)
+    end
+    puts columns.join(' ' * 4)
+  end
+end
+
 def demand_max_characters_of_filename(filenames)
   filename_lengths = []
   filenames.each do |filename|
@@ -21,36 +57,4 @@ def demand_column_indexes
   indexes
 end
 
-option = {}
-OptionParser.new do |opt|
-  opt.on('-a') { |v| option[:a] = v }
-  opt.parse!(ARGV)
-end
-
-if option[:a]
-  filenames = []
-  Dir.foreach('.') { |f| filenames << f }
-  filenames = filenames.sort
-else
-  filenames = Dir.glob("[^\.]*")
-end
-
-quotient, remainder = filenames.length.divmod(NUMBER_OF_COLUMNS)
-filenames_transposed =
-  if remainder != 0
-    (NUMBER_OF_COLUMNS - remainder).times do
-      filenames << nil
-    end
-    filenames.each_slice(quotient + 1).to_a.transpose
-  else
-    filenames.each_slice(quotient).to_a.transpose
-  end
-
-max_characters_of_filename = demand_max_characters_of_filename(filenames)
-filenames_transposed.each do |column|
-  columns = [column[0].to_s.ljust(max_characters_of_filename)]
-  demand_column_indexes.each do |i|
-    columns << column[i].to_s.ljust(max_characters_of_filename)
-  end
-  puts columns.join(' ' * 4)
-end
+main
