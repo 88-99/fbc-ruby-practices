@@ -6,25 +6,11 @@ require 'optparse'
 NUMBER_OF_COLUMNS = 3
 
 def main
-  option = {}
-  OptionParser.new do |opt|
-    opt.on('-a') { |v| option[:a] = v }  # ①コマンドラインオプションを解析（パース）する
-    opt.parse!(ARGV)
-  end
-
-  filenames = option[:a] ? Dir.glob('*', File::FNM_DOTMATCH) : Dir.glob('*')  # ②ファイル&ディレクトリをケース別にfilenamesへ格納
-
-  quotient, remainder = filenames.length.divmod(NUMBER_OF_COLUMNS)  # ③ファイル&ディレクトリの総数を表示列数で割った商と余りを求める。
-  filenames_transposed =  # ④filenamesにtransposeメソッドを適用
-    if remainder != 0
-      (NUMBER_OF_COLUMNS - remainder).times { filenames << nil }
-      filenames.each_slice(quotient + 1).to_a.transpose
-    else
-      filenames.each_slice(quotient).to_a.transpose
-    end
-
+  filenames = make_filenames
+  result_filenames_transposed = filenames_transposed(filenames)
   max_characters_of_filename = demand_max_characters_of_filename(filenames)
-  filenames_transposed.each do |column|  # ⑤transposeメソッドが適用された配列をターミナルへ表示
+
+  result_filenames_transposed.each do |column| # ⑤transposeメソッドが適用された配列をターミナルへ表示
     columns = [column[0].to_s.ljust(max_characters_of_filename)]
     demand_column_indexes.each { |i| columns << column[i].to_s.ljust(max_characters_of_filename) }
     puts columns.join(' ' * 4)
@@ -37,6 +23,26 @@ end
 
 def demand_column_indexes
   1.upto(NUMBER_OF_COLUMNS - 1).map { |x| x }
+end
+
+def make_filenames
+  option = {}
+  OptionParser.new do |opt|
+    opt.on('-a') { |v| option[:a] = v } # ①コマンドラインオプションを解析（パース）する
+    opt.parse!(ARGV)
+  end
+  option[:a] ? Dir.glob('*', File::FNM_DOTMATCH) : Dir.glob('*') # ②ファイル&ディレクトリをケース別にfilenamesへ格納
+end
+
+def filenames_transposed(filenames)
+  quotient, remainder = filenames.length.divmod(NUMBER_OF_COLUMNS) # ③ファイル&ディレクトリの総数を表示列数で割った商と余りを求める。
+  # ④filenamesにtransposeメソッドを適用
+  if remainder != 0
+    (NUMBER_OF_COLUMNS - remainder).times { filenames << nil }
+    filenames.each_slice(quotient + 1).to_a.transpose
+  else
+    filenames.each_slice(quotient).to_a.transpose
+  end
 end
 
 main
