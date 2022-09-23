@@ -5,16 +5,30 @@ require 'optparse'
 
 NUMBER_OF_COLUMNS = 3
 
-def main
-  filenames = make_filenames
-  result_filenames_transposed = filenames_transposed(filenames)
+def main(argv_option)
+  filenames = search_filenames(argv_option)
+  filenames_transposed = prepare_to_transpose(filenames)
   max_characters_of_filename = demand_max_characters_of_filename(filenames)
 
-  result_filenames_transposed.each do |column| # ⑤transposeメソッドが適用された配列をターミナルへ表示
+  filenames_transposed.each do |column|
     columns = [column[0].to_s.ljust(max_characters_of_filename)]
     demand_column_indexes.each { |i| columns << column[i].to_s.ljust(max_characters_of_filename) }
     puts columns.join(' ' * 4)
   end
+end
+
+def parse_option(argv)
+  argv_option = {}
+  OptionParser.new do |opt|
+    opt.on('-a') { |v| argv_option[:a] = v }
+    opt.parse!(argv)
+  end
+  argv_option
+end
+
+argv_option = parse_option(ARGV)
+def search_filenames(argv_option)
+  argv_option[:a] ? Dir.glob('*', File::FNM_DOTMATCH) : Dir.glob('*')
 end
 
 def demand_max_characters_of_filename(filenames)
@@ -25,18 +39,8 @@ def demand_column_indexes
   1.upto(NUMBER_OF_COLUMNS - 1).map { |x| x }
 end
 
-def make_filenames
-  option = {}
-  OptionParser.new do |opt|
-    opt.on('-a') { |v| option[:a] = v } # ①コマンドラインオプションを解析（パース）する
-    opt.parse!(ARGV)
-  end
-  option[:a] ? Dir.glob('*', File::FNM_DOTMATCH) : Dir.glob('*') # ②ファイル&ディレクトリをケース別にfilenamesへ格納
-end
-
-def filenames_transposed(filenames)
-  quotient, remainder = filenames.length.divmod(NUMBER_OF_COLUMNS) # ③ファイル&ディレクトリの総数を表示列数で割った商と余りを求める。
-  # ④filenamesにtransposeメソッドを適用
+def prepare_to_transpose(filenames)
+  quotient, remainder = filenames.length.divmod(NUMBER_OF_COLUMNS)
   if remainder != 0
     (NUMBER_OF_COLUMNS - remainder).times { filenames << nil }
     filenames.each_slice(quotient + 1).to_a.transpose
@@ -45,4 +49,4 @@ def filenames_transposed(filenames)
   end
 end
 
-main
+main(argv_option)
