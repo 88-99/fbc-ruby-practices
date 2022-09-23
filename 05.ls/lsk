@@ -11,10 +11,10 @@ def main
   filenames_transposed = transpose_safely(filenames)
   max_characters_of_filename = demand_max_characters_of_filename(filenames)
 
-  filenames_transposed.each do |column|
-    columns = [column[0].to_s.ljust(max_characters_of_filename)]
-    demand_column_indexes.each { |i| columns << column[i].to_s.ljust(max_characters_of_filename) }
-    puts columns.join(' ' * 4)
+  filenames_transposed.each do |row|
+    rows = [row[0].to_s.ljust(max_characters_of_filename)]
+    demand_row_indexes.each { |i| rows << row[i].to_s.ljust(max_characters_of_filename) }
+    puts rows.join(' ' * 4)
   end
 end
 
@@ -35,7 +35,7 @@ def demand_max_characters_of_filename(filenames)
   filenames.compact.map(&:length).max
 end
 
-def demand_column_indexes
+def demand_row_indexes
   1.upto(NUMBER_OF_COLUMNS - 1).map { |x| x }
 end
 
