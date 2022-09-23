@@ -5,9 +5,10 @@ require 'optparse'
 
 NUMBER_OF_COLUMNS = 3
 
-def main(argv_option)
+def main
+  argv_option = parse_option(ARGV)
   filenames = search_filenames(argv_option)
-  filenames_transposed = prepare_to_transpose(filenames)
+  filenames_transposed = transpose_safely(filenames)
   max_characters_of_filename = demand_max_characters_of_filename(filenames)
 
   filenames_transposed.each do |column|
@@ -26,7 +27,6 @@ def parse_option(argv)
   argv_option
 end
 
-argv_option = parse_option(ARGV)
 def search_filenames(argv_option)
   argv_option[:a] ? Dir.glob('*', File::FNM_DOTMATCH) : Dir.glob('*')
 end
@@ -39,7 +39,7 @@ def demand_column_indexes
   1.upto(NUMBER_OF_COLUMNS - 1).map { |x| x }
 end
 
-def prepare_to_transpose(filenames)
+def transpose_safely(filenames)
   quotient, remainder = filenames.length.divmod(NUMBER_OF_COLUMNS)
   if remainder != 0
     (NUMBER_OF_COLUMNS - remainder).times { filenames << nil }
@@ -49,4 +49,4 @@ def prepare_to_transpose(filenames)
   end
 end
 
-main(argv_option)
+main
