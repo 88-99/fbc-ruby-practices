@@ -1,46 +1,52 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require 'optparse'
+
 NUMBER_OF_COLUMNS = 3
 
 def main
-  filenames = Dir.glob("[^\.]*")
-
-  quotient, remainder = filenames.length.divmod(NUMBER_OF_COLUMNS)
-  filenames_transposed =
-    if remainder != 0
-      (NUMBER_OF_COLUMNS - remainder).times do
-        filenames << nil
-      end
-      filenames.each_slice(quotient + 1).to_a.transpose
-    else
-      filenames.each_slice(quotient).to_a.transpose
-    end
-
+  argv_option = parse_option(ARGV)
+  filenames = search_filenames(argv_option)
+  filenames_transposed = transpose_safely(filenames)
   max_characters_of_filename = demand_max_characters_of_filename(filenames)
-  filenames_transposed.each do |column|
-    columns = [column[0].to_s.ljust(max_characters_of_filename)]
-    demand_column_indexes.each do |i|
-      columns << column[i].to_s.ljust(max_characters_of_filename)
-    end
-    puts columns.join(' ' * 4)
+
+  filenames_transposed.each do |row|
+    rows = [row[0].to_s.ljust(max_characters_of_filename)]
+    demand_row_indexes.each { |i| rows << row[i].to_s.ljust(max_characters_of_filename) }
+    puts rows.join(' ' * 4)
   end
+end
+
+def parse_option(argv)
+  argv_option = {}
+  OptionParser.new do |opt|
+    opt.on('-a') { |v| argv_option[:a] = v }
+    opt.parse!(argv)
+  end
+  argv_option
+end
+
+def search_filenames(argv_option)
+  argv_option[:a] ? Dir.glob('*', File::FNM_DOTMATCH) : Dir.glob('*')
 end
 
 def demand_max_characters_of_filename(filenames)
-  filename_lengths = []
-  filenames.each do |filename|
-    next if filename.nil?
-
-    filename_lengths << filename.length
-  end
-  filename_lengths.max
+  filenames.compact.map(&:length).max
 end
 
-def demand_column_indexes
-  indexes = []
-  1.upto(NUMBER_OF_COLUMNS - 1) { |x| indexes << x }
-  indexes
+def demand_row_indexes
+  1.upto(NUMBER_OF_COLUMNS - 1).map { |x| x }
+end
+
+def transpose_safely(filenames)
+  quotient, remainder = filenames.length.divmod(NUMBER_OF_COLUMNS)
+  if remainder != 0
+    (NUMBER_OF_COLUMNS - remainder).times { filenames << nil }
+    filenames.each_slice(quotient + 1).to_a.transpose
+  else
+    filenames.each_slice(quotient).to_a.transpose
+  end
 end
 
 main
