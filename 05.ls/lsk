@@ -21,14 +21,14 @@ end
 def parse_option(argv)
   argv_option = {}
   OptionParser.new do |opt|
-    opt.on('-a') { |v| argv_option[:a] = v }
+    opt.on('-r') { |v| argv_option[:r] = v }
     opt.parse!(argv)
   end
   argv_option
 end
 
 def search_filenames(argv_option)
-  argv_option[:a] ? Dir.glob('*', File::FNM_DOTMATCH) : Dir.glob('*')
+  argv_option[:r] ? Dir.glob('*').reverse : Dir.glob('*')
 end
 
 def demand_max_characters_of_filename(filenames)
