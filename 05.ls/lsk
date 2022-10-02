@@ -2,33 +2,77 @@
 # frozen_string_literal: true
 
 require 'optparse'
+require 'etc'
 
 NUMBER_OF_COLUMNS = 3
 
 def main
   argv_option = parse_option(ARGV)
   filenames = search_filenames(argv_option)
-  filenames_transposed = transpose_safely(filenames)
-  max_characters_of_filename = demand_max_characters_of_filename(filenames)
+  if argv_option[:l]
+    file_path = []
+    filenames.each do |x|
+      file_path << Dir.getwd + "/" + x
+    end
 
-  filenames_transposed.each do |row|
-    rows = [row[0].to_s.ljust(max_characters_of_filename)]
-    demand_row_indexes.each { |i| rows << row[i].to_s.ljust(max_characters_of_filename) }
-    puts rows.join(' ' * 4)
+    file_nlink = []
+    file_path.each do |x|
+      file_nlink << File.stat(x).nlink
+    end
+
+    file_size = []
+    file_path.each do |x|
+      file_size << File.stat(x).size
+    end
+
+    stats = []
+    file_path.each do |fp|
+      stats << File.stat(fp).blocks
+    end
+    puts "total #{stats.sum}"
+
+    file_path.each do |fp|
+      stat = File.stat(fp)
+
+      permission_number = stat.mode.to_s(8)
+      permission_number.insert(0, "0") if permission_number.length == 5
+      file_type = {"01" => "p", "02" => "c", "04" => "d", "06" => "b", "10" => "-", "12" => "l", "14" => "s",}
+      file_mode = {"00" => "---", "01" => "--x", "02" => "-w-", "03" => "-wx", "04" => "r--", "05" => "r-x", "06" => "rw-", "07" => "rwx"}
+      permission = []
+      permission << file_type[permission_number.slice(0..1)]
+      permission << file_mode[permission_number.slice(2..3)]
+      permission << file_mode["0" + permission_number.slice(4)]
+      permission << file_mode["0" + permission_number.slice(5)]
+
+      user = Etc.getpwuid(File.stat(fp).uid).name
+      group = Etc.getgrgid(File.stat(fp).gid).name
+      stat_mime = stat.mtime
+      filename = File.basename(fp)
+      puts "#{permission.join}  #{stat.nlink.to_s.rjust(file_nlink.max.to_s.length)} #{user}  #{group}  #{stat.size.to_s.rjust(file_size.max.to_s.length)} #{stat_mime.month.to_s.rjust(2)} #{stat_mime.day.to_s.rjust(2)} #{stat_mime.strftime("%H:%M")} #{filename}"
+    end
+  else
+    filenames_transposed = transpose_safely(filenames)
+    max_characters_of_filename = demand_max_characters_of_filename(filenames)
+
+    filenames_transposed.each do |row|
+      rows = [row[0].to_s.ljust(max_characters_of_filename)]
+      demand_row_indexes.each { |i| rows << row[i].to_s.ljust(max_characters_of_filename) }
+      puts rows.join(' ' * 4)
+    end
   end
 end
 
 def parse_option(argv)
   argv_option = {}
   OptionParser.new do |opt|
-    opt.on('-r') { |v| argv_option[:r] = v }
+    opt.on('-l') { |v| argv_option[:l] = v }
     opt.parse!(argv)
   end
   argv_option
 end
 
 def search_filenames(argv_option)
-  argv_option[:r] ? Dir.glob('*').reverse : Dir.glob('*')
+  Dir.glob('*')
 end
 
 def demand_max_characters_of_filename(filenames)
