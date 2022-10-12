@@ -12,7 +12,7 @@ def main
   if argv_option[:l]
     file_paths = make_file_paths(filenames)
     puts "total #{demand_total_file_blocks(file_paths)}"
-    build_and_show_row_l_option(file_paths)
+    puts build_row_l_option(file_paths)
   else
     filenames_transposed = transpose_safely(filenames)
     max_characters_of_filename = demand_max_characters_of_filename(filenames)
@@ -47,11 +47,11 @@ def demand_total_file_blocks(file_paths)
   file_paths.sum
 end
 
-def build_and_show_row_l_option(file_paths)
+def build_row_l_option(file_paths)
   file_nlinks = file_paths.map { |x| File.stat(x).nlink }
   file_sizes = file_paths.map { |x| File.stat(x).size }
 
-  file_paths.each do |fp|
+  file_paths.map do |fp|
     stat = File.stat(fp)
     row = "#{build_permission(stat)}  "
     row += "#{stat.nlink.to_s.rjust(file_nlinks.max.to_s.length)} "
@@ -61,8 +61,7 @@ def build_and_show_row_l_option(file_paths)
     row += "#{stat.mtime.month.to_s.rjust(2)} "
     row += "#{stat.mtime.day.to_s.rjust(2)} "
     row += "#{stat.mtime.strftime('%H:%M')} "
-    row += File.basename(fp)
-    puts row
+    row + File.basename(fp)
   end
 end
 
