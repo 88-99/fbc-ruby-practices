@@ -2,33 +2,101 @@
 # frozen_string_literal: true
 
 require 'optparse'
+require 'etc'
 
 NUMBER_OF_COLUMNS = 3
 
 def main
   argv_option = parse_option(ARGV)
   filenames = search_filenames(argv_option)
-  filenames_transposed = transpose_safely(filenames)
-  max_characters_of_filename = demand_max_characters_of_filename(filenames)
+  if argv_option[:l]
+    file_paths = make_file_paths(filenames)
+    puts "total #{demand_total_file_blocks(file_paths)}"
+    puts build_row_l_option(file_paths)
+  else
+    filenames_transposed = transpose_safely(filenames)
+    max_characters_of_filename = demand_max_characters_of_filename(filenames)
 
-  filenames_transposed.each do |row|
-    rows = [row[0].to_s.ljust(max_characters_of_filename)]
-    demand_row_indexes.each { |i| rows << row[i].to_s.ljust(max_characters_of_filename) }
-    puts rows.join(' ' * 4)
+    filenames_transposed.each do |row|
+      rows = [row[0].to_s.ljust(max_characters_of_filename)]
+      demand_row_indexes.each { |i| rows << row[i].to_s.ljust(max_characters_of_filename) }
+      puts rows.join(' ' * 4)
+    end
   end
 end
 
 def parse_option(argv)
   argv_option = {}
   OptionParser.new do |opt|
-    opt.on('-r') { |v| argv_option[:r] = v }
+    opt.on('-l') { |v| argv_option[:l] = v }
     opt.parse!(argv)
   end
   argv_option
 end
 
-def search_filenames(argv_option)
-  argv_option[:r] ? Dir.glob('*').reverse : Dir.glob('*')
+def search_filenames(_argv_option)
+  Dir.glob('*')
+end
+
+def make_file_paths(filenames)
+  filenames.map { |x| "#{Dir.getwd}/#{x}" }
+end
+
+def demand_total_file_blocks(file_paths)
+  file_paths = file_paths.map { |x| File.stat(x).blocks }
+  file_paths.sum
+end
+
+def build_row_l_option(file_paths)
+  file_nlinks = file_paths.map { |x| File.stat(x).nlink }
+  file_sizes = file_paths.map { |x| File.stat(x).size }
+
+  file_paths.map do |fp|
+    stat = File.stat(fp)
+    row = "#{build_permission(stat)}  "
+    row += "#{stat.nlink.to_s.rjust(file_nlinks.max.to_s.length)} "
+    row += "#{Etc.getpwuid(File.stat(fp).uid).name}  "
+    row += "#{Etc.getgrgid(File.stat(fp).gid).name}  "
+    row += "#{stat.size.to_s.rjust(file_sizes.max.to_s.length)} "
+    row += "#{stat.mtime.month.to_s.rjust(2)} "
+    row += "#{stat.mtime.day.to_s.rjust(2)} "
+    row += "#{stat.mtime.strftime('%H:%M')} "
+    row + File.basename(fp)
+  end
+end
+
+def build_permission(stat)
+  permission_number = stat.mode.to_s(8)
+  permission_number.insert(0, '0') if permission_number.length == 5
+  permission = file_type[permission_number.slice(0..1)]
+  permission += file_mode[permission_number.slice(2..3)]
+  permission += file_mode["0#{permission_number.slice(4)}"]
+  permission + file_mode["0#{permission_number.slice(5)}"]
+end
+
+def file_type
+  {
+    '01' => 'p',
+    '02' => 'c',
+    '04' => 'd',
+    '06' => 'b',
+    '10' => '-',
+    '12' => 'l',
+    '14' => 's'
+  }
+end
+
+def file_mode
+  {
+    '00' => '---',
+    '01' => '--x',
+    '02' => '-w-',
+    '03' => '-wx',
+    '04' => 'r--',
+    '05' => 'r-x',
+    '06' => 'rw-',
+    '07' => 'rwx'
+  }
 end
 
 def demand_max_characters_of_filename(filenames)
