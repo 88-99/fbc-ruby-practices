@@ -9,33 +9,46 @@ NUMBER_OF_COLUMNS = 3
 def main
   argv_option = parse_option(ARGV)
   filenames = search_filenames(argv_option)
+  file_paths = search_file_paths(argv_option)
   if argv_option[:l]
-    file_paths = make_file_paths(filenames)
     puts "total #{demand_total_file_blocks(file_paths)}"
     puts build_row_l_option(file_paths)
   else
-    filenames_transposed = transpose_safely(filenames)
-    max_characters_of_filename = demand_max_characters_of_filename(filenames)
-
-    filenames_transposed.each do |row|
-      rows = [row[0].to_s.ljust(max_characters_of_filename)]
-      demand_row_indexes.each { |i| rows << row[i].to_s.ljust(max_characters_of_filename) }
-      puts rows.join(' ' * 4)
-    end
+    puts build_form_exept_l_option(filenames)
   end
 end
 
 def parse_option(argv)
   argv_option = {}
   OptionParser.new do |opt|
+    opt.on('-a') { |v| argv_option[:a] = v }
     opt.on('-l') { |v| argv_option[:l] = v }
+    opt.on('-r') { |v| argv_option[:r] = v }
     opt.parse!(argv)
   end
   argv_option
 end
 
-def search_filenames(_argv_option)
-  Dir.glob('*')
+def search_filenames(argv_option)
+  {
+    { a: true, r: true } => search_dotmatch_filenames.reverse,
+    { a: true } => search_dotmatch_filenames,
+    { r: true } => Dir.glob('*').reverse,
+    {} => Dir.glob('*')
+  }[argv_option]
+end
+
+def search_file_paths(argv_option)
+  {
+    { a: true, l: true, r: true } => make_file_paths(search_dotmatch_filenames.reverse),
+    { a: true, l: true } => make_file_paths(search_dotmatch_filenames),
+    { r: true, l: true } => make_file_paths(Dir.glob('*').reverse),
+    { l: true } => make_file_paths(Dir.glob('*'))
+  }[argv_option]
+end
+
+def search_dotmatch_filenames
+  Dir.glob('*', File::FNM_DOTMATCH)
 end
 
 def make_file_paths(filenames)
@@ -114,6 +127,17 @@ def transpose_safely(filenames)
     filenames.each_slice(quotient + 1).to_a.transpose
   else
     filenames.each_slice(quotient).to_a.transpose
+  end
+end
+
+def build_form_exept_l_option(filenames)
+  filenames_transposed = transpose_safely(filenames)
+  max_characters_of_filename = demand_max_characters_of_filename(filenames)
+
+  filenames_transposed.map do |row|
+    rows = [row[0].to_s.ljust(max_characters_of_filename)]
+    demand_row_indexes.each { |i| rows << row[i].to_s.ljust(max_characters_of_filename) }
+    rows.join(' ' * 4)
   end
 end
 
