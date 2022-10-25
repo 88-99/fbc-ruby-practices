@@ -26,29 +26,35 @@ def parse_option(argv)
     opt.on('-r') { |v| argv_option[:r] = v }
     opt.parse!(argv)
   end
+  # argv_option = argv.getopts('a', 'l', 'r')
   argv_option
+  # argv_option
 end
 
 def search_filenames(argv_option)
-  {
-    { a: true, r: true } => search_dotmatch_filenames.reverse,
-    { a: true } => search_dotmatch_filenames,
-    { r: true } => Dir.glob('*').reverse,
-    {} => Dir.glob('*')
-  }[argv_option]
+  case argv_option.keys.sort
+  when %i[a r]
+    Dir.glob('*', File::FNM_DOTMATCH).reverse
+  when %i[a]
+    Dir.glob('*', File::FNM_DOTMATCH)
+  when %i[r]
+    Dir.glob('*').reverse
+  when []
+    Dir.glob('*')
+  end
 end
 
 def search_file_paths(argv_option)
-  {
-    { a: true, l: true, r: true } => make_file_paths(search_dotmatch_filenames.reverse),
-    { a: true, l: true } => make_file_paths(search_dotmatch_filenames),
-    { r: true, l: true } => make_file_paths(Dir.glob('*').reverse),
-    { l: true } => make_file_paths(Dir.glob('*'))
-  }[argv_option]
-end
-
-def search_dotmatch_filenames
-  Dir.glob('*', File::FNM_DOTMATCH)
+  case argv_option.keys.sort
+  when %i[a l r]
+    make_file_paths(Dir.glob('*', File::FNM_DOTMATCH).reverse)
+  when %i[a l]
+    make_file_paths(Dir.glob('*', File::FNM_DOTMATCH))
+  when %i[l r]
+    make_file_paths(Dir.glob('*').reverse)
+  when %i[l]
+    make_file_paths(Dir.glob('*'))
+  end
 end
 
 def make_file_paths(filenames)
