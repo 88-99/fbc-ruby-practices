@@ -26,9 +26,7 @@ def parse_option(argv)
     opt.on('-r') { |v| argv_option[:r] = v }
     opt.parse!(argv)
   end
-  # argv_option = argv.getopts('a', 'l', 'r')
   argv_option
-  # argv_option
 end
 
 def search_filenames(argv_option)
