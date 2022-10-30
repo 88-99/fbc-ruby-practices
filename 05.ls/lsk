@@ -8,13 +8,14 @@ NUMBER_OF_COLUMNS = 3
 
 def main
   argv_option = parse_option(ARGV)
-  filenames = search_filenames(argv_option)
-  file_paths = search_file_paths(argv_option)
+  filenames = argv_option[:a] ? Dir.glob('*', File::FNM_DOTMATCH) : Dir.glob('*')
+  filenames = argv_option[:r] ? filenames.reverse : filenames
+
   if argv_option[:l]
-    puts "total #{demand_total_file_blocks(file_paths)}"
-    puts build_row_l_option(file_paths)
+    puts "total #{demand_total_file_blocks(make_file_paths(filenames))}"
+    puts build_row_l_option(make_file_paths(filenames))
   else
-    puts build_form_exept_l_option(filenames)
+    puts build_form_except_l_option(filenames)
   end
 end
 
@@ -27,32 +28,6 @@ def parse_option(argv)
     opt.parse!(argv)
   end
   argv_option
-end
-
-def search_filenames(argv_option)
-  case argv_option.keys.sort
-  when %i[a r]
-    Dir.glob('*', File::FNM_DOTMATCH).reverse
-  when %i[a]
-    Dir.glob('*', File::FNM_DOTMATCH)
-  when %i[r]
-    Dir.glob('*').reverse
-  when []
-    Dir.glob('*')
-  end
-end
-
-def search_file_paths(argv_option)
-  case argv_option.keys.sort
-  when %i[a l r]
-    make_file_paths(Dir.glob('*', File::FNM_DOTMATCH).reverse)
-  when %i[a l]
-    make_file_paths(Dir.glob('*', File::FNM_DOTMATCH))
-  when %i[l r]
-    make_file_paths(Dir.glob('*').reverse)
-  when %i[l]
-    make_file_paths(Dir.glob('*'))
-  end
 end
 
 def make_file_paths(filenames)
@@ -134,7 +109,7 @@ def transpose_safely(filenames)
   end
 end
 
-def build_form_exept_l_option(filenames)
+def build_form_except_l_option(filenames)
   filenames_transposed = transpose_safely(filenames)
   max_characters_of_filename = demand_max_characters_of_filename(filenames)
 
