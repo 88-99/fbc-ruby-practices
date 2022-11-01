@@ -8,34 +8,26 @@ NUMBER_OF_COLUMNS = 3
 
 def main
   argv_option = parse_option(ARGV)
-  filenames = search_filenames(argv_option)
-  if argv_option[:l]
-    file_paths = make_file_paths(filenames)
-    puts "total #{demand_total_file_blocks(file_paths)}"
-    puts build_row_l_option(file_paths)
-  else
-    filenames_transposed = transpose_safely(filenames)
-    max_characters_of_filename = demand_max_characters_of_filename(filenames)
+  filenames = argv_option[:a] ? Dir.glob('*', File::FNM_DOTMATCH) : Dir.glob('*')
+  filenames = filenames.reverse if argv_option[:r]
 
-    filenames_transposed.each do |row|
-      rows = [row[0].to_s.ljust(max_characters_of_filename)]
-      demand_row_indexes.each { |i| rows << row[i].to_s.ljust(max_characters_of_filename) }
-      puts rows.join(' ' * 4)
-    end
+  if argv_option[:l]
+    puts "total #{demand_total_file_blocks(make_file_paths(filenames))}"
+    puts build_row_l_option(make_file_paths(filenames))
+  else
+    puts build_form_except_l_option(filenames)
   end
 end
 
 def parse_option(argv)
   argv_option = {}
   OptionParser.new do |opt|
+    opt.on('-a') { |v| argv_option[:a] = v }
     opt.on('-l') { |v| argv_option[:l] = v }
+    opt.on('-r') { |v| argv_option[:r] = v }
     opt.parse!(argv)
   end
   argv_option
-end
-
-def search_filenames(_argv_option)
-  Dir.glob('*')
 end
 
 def make_file_paths(filenames)
@@ -114,6 +106,17 @@ def transpose_safely(filenames)
     filenames.each_slice(quotient + 1).to_a.transpose
   else
     filenames.each_slice(quotient).to_a.transpose
+  end
+end
+
+def build_form_except_l_option(filenames)
+  filenames_transposed = transpose_safely(filenames)
+  max_characters_of_filename = demand_max_characters_of_filename(filenames)
+
+  filenames_transposed.map do |row|
+    rows = [row[0].to_s.ljust(max_characters_of_filename)]
+    demand_row_indexes.each { |i| rows << row[i].to_s.ljust(max_characters_of_filename) }
+    rows.join(' ' * 4)
   end
 end
 
