@@ -9,7 +9,7 @@ NUMBER_OF_COLUMNS = 3
 def main
   argv_option = parse_option(ARGV)
   filenames = argv_option[:a] ? Dir.glob('*', File::FNM_DOTMATCH) : Dir.glob('*')
-  filenames = argv_option[:r] ? filenames.reverse : filenames
+  filenames = filenames.reverse if argv_option[:r]
 
   if argv_option[:l]
     puts "total #{demand_total_file_blocks(make_file_paths(filenames))}"
