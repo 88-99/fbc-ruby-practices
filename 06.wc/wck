@@ -1,0 +1,68 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'optparse'
+require 'debug'
+
+params = ARGV.getopts('lwc')
+
+def make_stdin_option(stdin_read)
+  {
+  line: stdin_read.lines.count,
+  word: stdin_read.split(/\s+/).count,
+  size: stdin_read.size,
+  }
+end
+
+def make_file_options(path)
+  {
+    line: File.read(path).lines.count,
+    word: File.read(path).split(/\s+/).count,
+    size: File.read(path).size,
+  }
+end
+
+if ARGV.empty?
+  stdin_read = $stdin.read
+  options = [make_stdin_option(stdin_read).to_h]
+
+  lines = make_stdin_option(stdin_read)[:line]
+  words = make_stdin_option(stdin_read)[:word]
+  sizes = make_stdin_option(stdin_read)[:size]
+else
+  paths = ARGV
+  options = paths.map { |path| make_file_options(path) } # options => [{:line=>3, :word=>3, :size=>12}, {:line=>5, :word=>7, :size=>35}]
+  
+  lines = options.map { |option| option[:line] } # lines => [3, 5]
+  words = options.map { |option| option[:word] }
+  sizes = options.map { |option| option[:size] }
+end
+
+hash = { 'l' => lines, 'w' => words, 'c' => sizes }
+selected_options = # ["l", "c"]
+  if params.to_a.map { |x| x[1] }.any?
+    params.to_a.map { |x| x[0] if x[1] }.compact # ["l", nil, "c"].compact
+  else
+    params.to_a.map { |x| x[0] }.compact
+  end
+
+ar = selected_options.map { |option| hash.dig(option) } # hashの値(配列)を取得 ar => [[3, 5], [12, 35]]
+ar = ar.compact.map { |x| [] << x } if ARGV.empty?
+# ar = selected_options.map { |option| hash.dig(option) }.compact.map { |x| [] << x }
+
+ar << paths unless paths.nil? # ar => [[3, 5], [12, 35], ["11", "2222"]]
+
+i = ar.length
+indexes = 0.upto(i-1).to_a
+transposed = ar.transpose # transposed => [[3, 12, "11"], [5, 35, "2222"]]
+
+total0, total1, total2 = 0, 0, 0
+transposed.map do |row|
+  rows = indexes.map { |i| [] << row[i] } # rows => 1回目 [[3], [12], ["11"]], 2回目 [[5], [35], ["2222"]]
+  puts rows.join(' ' * 4)
+
+  total0 += row[0] if i >= 2
+  total1 += row[1] if i >= 3
+  total2 += row[2] if i == 4
+end
+puts "#{[total0, total1, total2].pop(i-1).join(' ' * 4)}    total" if !ARGV.empty? && paths.length != 1
