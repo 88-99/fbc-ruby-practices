@@ -71,7 +71,7 @@ def puts_form(transposed_values, values_length)
     total1 += row[1] if values_length >= 3
     total2 += row[2] if values_length == 4
   end
-  puts "#{[total0, total1, total2].pop(values_length - 1).join(' ' * 4)}    total" if !ARGV.empty? && ARGV.length != 1
+  puts "#{[total0, total1, total2].slice!(0..values_length - 2).join(' ' * 4)}    total" if !ARGV.empty? && ARGV.length != 1
 end
 
 main
