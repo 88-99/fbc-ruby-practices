@@ -7,29 +7,34 @@ def main
   params = ARGV.getopts('lwc')
   lines, words, sizes = path_or_stdin
   option_conversion = { 'l' => lines, 'w' => words, 'c' => sizes }
+  line_total, word_total, size_total = make_total(lines, words, sizes) if !ARGV.empty? && ARGV.length != 1
+  option_conversion_total = { 'l' => line_total, 'w' => word_total, 'c' => size_total }
   selected_options = select_option(params)
   transposed_values, values_length = transpose_safely(selected_options, option_conversion)
-  puts_form(transposed_values, values_length)
+  form_indexes = make_form_indexes(values_length)
+  max_length = make_max_length(lines, words, sizes) if !ARGV.empty? && ARGV.length != 1
+  puts_form(transposed_values, form_indexes, max_length)
+  puts_total(selected_options, option_conversion_total, max_length) if !ARGV.empty? && ARGV.length != 1
 end
 
 def path_or_stdin
   if ARGV.empty?
     stdin_read = $stdin.read
-    make_stdin_options(stdin_read)
+    make_stdin_values(stdin_read)
   else
-    options = ARGV.map { |path| make_file_options(path) }
-    substitute_file_options(options)
+    file_values = ARGV.map { |path| make_file_values(path) }
+    substitute_file_values(file_values)
   end
 end
 
-def make_stdin_options(stdin_read)
+def make_stdin_values(stdin_read)
   lines = stdin_read.lines.count
   words = stdin_read.split(/\s+/).count
   sizes = stdin_read.size
   [lines, words, sizes]
 end
 
-def make_file_options(path)
+def make_file_values(path)
   {
     line: File.read(path).lines.count,
     word: File.read(path).split(/\s+/).count,
@@ -37,10 +42,10 @@ def make_file_options(path)
   }
 end
 
-def substitute_file_options(options)
-  lines = options.map { |option| option[:line] }
-  words = options.map { |option| option[:word] }
-  sizes = options.map { |option| option[:size] }
+def substitute_file_values(file_values)
+  lines = file_values.map { |value| value[:line] }
+  words = file_values.map { |value| value[:word] }
+  sizes = file_values.map { |value| value[:size] }
   [lines, words, sizes]
 end
 
@@ -54,24 +59,37 @@ end
 
 def transpose_safely(selected_options, option_conversion)
   values = selected_options.map { |option| option_conversion[option] } # hashの値(配列)を取得
+  # values = ARGV.empty? ? [values.compact] : values << ARGV # stdinの出力結果が1行にならない
   values = ARGV.empty? ? values.compact.map { |x| [] << x } : values << ARGV
   [values.transpose, values.length]
 end
 
-def puts_form(transposed_values, values_length)
-  indexes = 0.upto(values_length - 1).to_a
-  total0 = 0
-  total1 = 0
-  total2 = 0
+def puts_form(transposed_values, form_indexes, max_length)
   transposed_values.map do |row|
-    rows = indexes.map { |i| [] << row[i] }
-    puts rows.join(' ' * 4)
-
-    total0 += row[0] if values_length >= 2
-    total1 += row[1] if values_length >= 3
-    total2 += row[2] if values_length == 4
+    rows = form_indexes.map { |i| row[i] }
+    puts rows.map { |value|
+      max_length.nil? ? value : value.to_s.rjust(max_length)
+    }.join(' ' * 4)
   end
-  puts "#{[total0, total1, total2].slice!(0..values_length - 2).join(' ' * 4)}    total" if !ARGV.empty? && ARGV.length != 1
+end
+
+def puts_total(selected_options, option_conversion_total, max_length)
+  values = selected_options.map { |option| option_conversion_total[option] } # hashの値(配列)を取得
+  puts "#{values.map { |x| x.to_s.rjust(max_length) }.join(' ' * 4)}    total"
+end
+
+def make_total(lines, words, sizes)
+  [lines, words, sizes].map(&:sum)
+end
+
+def make_max_length(lines, words, sizes)
+  [lines, words, sizes].map(&:sum).map do |sum|
+    sum.to_s.length
+  end.max
+end
+
+def make_form_indexes(values_length)
+  0.upto(values_length - 1).to_a
 end
 
 main
