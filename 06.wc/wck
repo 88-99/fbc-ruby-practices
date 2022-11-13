@@ -2,17 +2,20 @@
 # frozen_string_literal: true
 
 require 'optparse'
+require 'debug'
 
 def main
   params = ARGV.getopts('lwc')
   lines, words, sizes = path_or_stdin
   option_conversion = { 'l' => lines, 'w' => words, 'c' => sizes }
-  line_total, word_total, size_total = make_total(lines, words, sizes) if !ARGV.empty? && ARGV.length != 1
-  option_conversion_total = { 'l' => line_total, 'w' => word_total, 'c' => size_total }
   selected_options = select_option(params)
   transposed_values, values_length = transpose_safely(selected_options, option_conversion)
   form_indexes = make_form_indexes(values_length)
-  max_length = make_max_length(lines, words, sizes) if !ARGV.empty? && ARGV.length != 1
+  if !ARGV.empty? && ARGV.length != 1
+    line_total, word_total, size_total = make_total(lines, words, sizes)
+    option_conversion_total = { 'l' => line_total, 'w' => word_total, 'c' => size_total }
+    max_length = make_max_length(lines, words, sizes)
+  end
   puts_form(transposed_values, form_indexes, max_length)
   puts_total(selected_options, option_conversion_total, max_length) if !ARGV.empty? && ARGV.length != 1
 end
