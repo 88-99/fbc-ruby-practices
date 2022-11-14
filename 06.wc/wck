@@ -2,22 +2,31 @@
 # frozen_string_literal: true
 
 require 'optparse'
-require 'debug'
 
 def main
   params = ARGV.getopts('lwc')
-  lines, words, sizes = path_or_stdin
+
+  if ARGV.empty?
+    lines, words, sizes = path_or_stdin
+  else
+    directories, files, substiuted_values = path_or_stdin
+    lines, words, sizes = substiuted_values
+  end
+
   option_conversion = { 'l' => lines, 'w' => words, 'c' => sizes }
   selected_options = select_option(params)
-  transposed_values, values_length = transpose_safely(selected_options, option_conversion)
+  transposed_values, values_length = transpose_safely(selected_options, option_conversion, files)
   form_indexes = make_form_indexes(values_length)
+
   if !ARGV.empty? && ARGV.length != 1
     line_total, word_total, size_total = make_total(lines, words, sizes)
     option_conversion_total = { 'l' => line_total, 'w' => word_total, 'c' => size_total }
     max_length = make_max_length(lines, words, sizes)
   end
+
   puts_form(transposed_values, form_indexes, max_length)
   puts_total(selected_options, option_conversion_total, max_length) if !ARGV.empty? && ARGV.length != 1
+  puts_directory_comment(directories) unless ARGV.empty?
 end
 
 def path_or_stdin
@@ -25,8 +34,11 @@ def path_or_stdin
     stdin_read = $stdin.read
     make_stdin_values(stdin_read)
   else
-    file_values = ARGV.map { |path| make_file_values(path) }
-    substitute_file_values(file_values)
+    files = []
+    directories = []
+    ARGV.map { |path| FileTest.directory?(path) ? directories << path : files << path }
+    file_values = files.map { |file| make_file_values(file) }
+    [directories, files, substitute_file_values(file_values)]
   end
 end
 
@@ -60,10 +72,10 @@ def select_option(params)
   end
 end
 
-def transpose_safely(selected_options, option_conversion)
+def transpose_safely(selected_options, option_conversion, files)
   values = selected_options.map { |option| option_conversion[option] } # hashの値(配列)を取得
   # values = ARGV.empty? ? [values.compact] : values << ARGV # stdinの出力結果が1行にならない
-  values = ARGV.empty? ? values.compact.map { |x| [] << x } : values << ARGV
+  values = ARGV.empty? ? values.compact.map { |x| [] << x } : values << files
   [values.transpose, values.length]
 end
 
@@ -79,6 +91,12 @@ end
 def puts_total(selected_options, option_conversion_total, max_length)
   values = selected_options.map { |option| option_conversion_total[option] } # hashの値(配列)を取得
   puts "#{values.map { |x| x.to_s.rjust(max_length) }.join(' ' * 4)}    total"
+end
+
+def puts_directory_comment(directories)
+  directories.each do |directory|
+    puts "wck: #{directory}: read: Is a directory"
+  end
 end
 
 def make_total(lines, words, sizes)
