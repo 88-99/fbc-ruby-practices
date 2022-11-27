@@ -8,14 +8,13 @@ def main
   options = ARGV.getopts('lwc')
   options = { 'l' => true, 'w' => true, 'c' => true } if options.values.none?
 
-  if ARGV[0].nil?
-    stdin_read = [$stdin.read] # 文字列を配列に入れて型をあわせる
+  if ARGV.empty?
+    stdin_read = $stdin.read
     lines, words, sizes = conversion_values(options, stdin_read)
 
     puts stdin_form(lines, words, sizes)
   else
-    paths = ARGV.map { |path| File.read(path) }
-    lines, words, sizes = conversion_values(options, paths)
+    lines, words, sizes = ARGV.map { |path| conversion_values(options, File.read(path)) }.transpose # File.read(path) はファイルの中身の文字列
 
     puts paths_form(lines, words, sizes)
     puts total(line: options['l'], word: options['w'], size: options['c']) if ARGV.length > 1
@@ -30,15 +29,15 @@ def conversion_values(options, stdin_read_or_paths)
 end
 
 def option_l(stdin_read_or_paths)
-  stdin_read_or_paths.map { |path| path.lines.count }
+  stdin_read_or_paths.lines.count # stdin_read_or_paths はファイルの中身の文字列
 end
 
 def option_w(stdin_read_or_paths)
-  stdin_read_or_paths.map { |path| path.split(/\s+/).count }
+  stdin_read_or_paths.split(/\s+/).count
 end
 
 def option_c(stdin_read_or_paths)
-  stdin_read_or_paths.map(&:bytesize)
+  stdin_read_or_paths.bytesize
 end
 
 def stdin_form(lines, words, sizes)
