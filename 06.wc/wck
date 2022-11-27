@@ -9,20 +9,20 @@ def main
   options = { 'l' => true, 'w' => true, 'c' => true } if options.values.none?
 
   if ARGV[0].nil?
-    stdin_read = $stdin.read
+    stdin_read = [$stdin.read] # 文字列を配列に入れて型をあわせる
     lines, words, sizes = conversion_values(options, stdin_read)
 
     puts stdin_form(lines, words, sizes)
   else
-    paths = ARGV
+    paths = ARGV.map { |path| File.read(path) }
     lines, words, sizes = conversion_values(options, paths)
 
     puts paths_form(lines, words, sizes)
-    puts total(line: options['l'], word: options['w'], size: options['c']).compact.join(' ' * 4) if ARGV.length > 1
+    puts total(line: options['l'], word: options['w'], size: options['c']) if ARGV.length > 1
   end
 end
 
-def conversion_values(options, stdin_read_or_paths)
+def conversion_values(options, stdin_read_or_paths) # 必要なオプションの値を代入
   lines = option_l(stdin_read_or_paths) if options['l']
   words = option_w(stdin_read_or_paths) if options['w']
   sizes = option_c(stdin_read_or_paths) if options['c']
@@ -30,27 +30,15 @@ def conversion_values(options, stdin_read_or_paths)
 end
 
 def option_l(stdin_read_or_paths)
-  ARGV[0].nil? ? stdin_read_or_paths.lines.count : stdin_read_or_paths.map { |path| File.read(path).lines.count }
+  stdin_read_or_paths.map { |path| path.lines.count }
 end
-# lines.countをまとめるためのアドバイスをいただきましたが、(45行目へ続く)
-# def option_l(stdin_read_or_paths, line: false)
-#   ARGV[0].nil? ? stdin_read_or_paths.lines.count : stdin_read_or_paths.map { |path| File.read(path).lines.count }
-#   if line
-#     if ARGV.nil?
-#       aaa =
-#     else
-#       aaa =
-#     end
-#   end
-#   aaa.lines.count 片方が文字列で片方が配列なので、どうしてもまとめ方がわかりません。
-# end
 
 def option_w(stdin_read_or_paths)
-  ARGV[0].nil? ? stdin_read_or_paths.split(/\s+/).count : stdin_read_or_paths.map { |path| File.read(path).split(/\s+/).count }
+  stdin_read_or_paths.map { |path| path.split(/\s+/).count }
 end
 
 def option_c(stdin_read_or_paths)
-  ARGV[0].nil? ? stdin_read_or_paths.bytesize : stdin_read_or_paths.map { |path| File.read(path).bytesize }
+  stdin_read_or_paths.map { |path| path.bytesize }
 end
 
 def stdin_form(lines, words, sizes)
@@ -68,7 +56,7 @@ def total(line: false, word: false, size: false)
   line_total = ARGV.map { |path| File.read(path).lines.count }.sum if line
   word_total = ARGV.map { |path| File.read(path).split(/\s+/).count }.sum if word
   size_total = ARGV.map { |path| File.read(path).bytesize }.sum if size
-  [line_total, word_total, size_total]
+  [line_total, word_total, size_total].compact.join(' ' * 4)
 end
 
 main
