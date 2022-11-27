@@ -2,115 +2,73 @@
 # frozen_string_literal: true
 
 require 'optparse'
+require 'debug' # debugger
 
 def main
-  params = ARGV.getopts('lwc')
+  options = ARGV.getopts('lwc')
+  options = { 'l' => true, 'w' => true, 'c' => true } if options.values.none?
 
-  if ARGV.empty?
-    lines, words, sizes = path_or_stdin
-  else
-    directories, files, substiuted_values = path_or_stdin
-    lines, words, sizes = substiuted_values
-  end
-
-  option_conversion = { 'l' => lines, 'w' => words, 'c' => sizes }
-  selected_options = select_option(params)
-  transposed_values, values_length = transpose_safely(selected_options, option_conversion, files)
-  form_indexes = make_form_indexes(values_length)
-
-  if !ARGV.empty? && ARGV.length != 1
-    line_total, word_total, size_total = make_total(lines, words, sizes)
-    option_conversion_total = { 'l' => line_total, 'w' => word_total, 'c' => size_total }
-    max_length = make_max_length(lines, words, sizes)
-  end
-
-  puts_form(transposed_values, form_indexes, max_length)
-  puts_total(selected_options, option_conversion_total, max_length) if !ARGV.empty? && ARGV.length != 1
-  puts_directory_comment(directories) unless ARGV.empty?
-end
-
-def path_or_stdin
-  if ARGV.empty?
+  if ARGV[0].nil?
     stdin_read = $stdin.read
-    make_stdin_values(stdin_read)
+    lines, words, sizes = conversion_values(options, stdin_read)
+
+    puts stdin_form(lines, words, sizes)
   else
-    files = []
-    directories = []
-    ARGV.map { |path| FileTest.directory?(path) ? directories << path : files << path }
-    file_values = files.map { |file| make_file_values(file) }
-    [directories, files, substitute_file_values(file_values)]
+    paths = ARGV
+    lines, words, sizes = conversion_values(options, paths)
+
+    puts paths_form(lines, words, sizes)
+    puts total(line: options['l'], word: options['w'], size: options['c']).compact.join(' ' * 4) if ARGV.length > 1
   end
 end
 
-def make_stdin_values(stdin_read)
-  lines = stdin_read.lines.count
-  words = stdin_read.split(/\s+/).count
-  sizes = stdin_read.size
+def conversion_values(options, stdin_read_or_paths)
+  lines = option_l(stdin_read_or_paths) if options['l']
+  words = option_w(stdin_read_or_paths) if options['w']
+  sizes = option_c(stdin_read_or_paths) if options['c']
   [lines, words, sizes]
 end
 
-def make_file_values(path)
-  {
-    line: File.read(path).lines.count,
-    word: File.read(path).split(/\s+/).count,
-    size: File.read(path).size
-  }
+def option_l(stdin_read_or_paths)
+  ARGV[0].nil? ? stdin_read_or_paths.lines.count : stdin_read_or_paths.map { |path| File.read(path).lines.count }
+end
+# lines.countをまとめるためのアドバイスをいただきましたが、(45行目へ続く)
+# def option_l(stdin_read_or_paths, line: false)
+#   ARGV[0].nil? ? stdin_read_or_paths.lines.count : stdin_read_or_paths.map { |path| File.read(path).lines.count }
+#   if line
+#     if ARGV.nil?
+#       aaa =
+#     else
+#       aaa =
+#     end
+#   end
+#   aaa.lines.count 片方が文字列で片方が配列なので、どうしてもまとめ方がわかりません。
+# end
+
+def option_w(stdin_read_or_paths)
+  ARGV[0].nil? ? stdin_read_or_paths.split(/\s+/).count : stdin_read_or_paths.map { |path| File.read(path).split(/\s+/).count }
 end
 
-def substitute_file_values(file_values)
-  lines = file_values.map { |value| value[:line] }
-  words = file_values.map { |value| value[:word] }
-  sizes = file_values.map { |value| value[:size] }
-  [lines, words, sizes]
+def option_c(stdin_read_or_paths)
+  ARGV[0].nil? ? stdin_read_or_paths.bytesize : stdin_read_or_paths.map { |path| File.read(path).bytesize }
 end
 
-def select_option(params)
-  if params.to_a.map { |x| x[1] }.any?
-    params.to_a.map { |x| x[0] if x[1] }.compact
-  else
-    params.to_a.map { |x| x[0] }.compact
+def stdin_form(lines, words, sizes)
+  [lines, words, sizes].compact.join(' ' * 4)
+end
+
+def paths_form(lines, words, sizes)
+  transposed = [lines, words, sizes, ARGV].compact.transpose
+  transposed.map do |row|
+    row.join(' ' * 4)
   end
 end
 
-def transpose_safely(selected_options, option_conversion, files)
-  values = selected_options.map { |option| option_conversion[option] } # hashの値(配列)を取得
-  # values = ARGV.empty? ? [values.compact] : values << ARGV # stdinの出力結果が1行にならない
-  values = ARGV.empty? ? values.compact.map { |x| [] << x } : values << files
-  [values.transpose, values.length]
-end
-
-def puts_form(transposed_values, form_indexes, max_length)
-  transposed_values.map do |row|
-    rows = form_indexes.map { |i| row[i] }
-    puts rows.map { |value|
-      max_length.nil? ? value : value.to_s.rjust(max_length)
-    }.join(' ' * 4)
-  end
-end
-
-def puts_total(selected_options, option_conversion_total, max_length)
-  values = selected_options.map { |option| option_conversion_total[option] } # hashの値(配列)を取得
-  puts "#{values.map { |x| x.to_s.rjust(max_length) }.join(' ' * 4)}    total"
-end
-
-def puts_directory_comment(directories)
-  directories.each do |directory|
-    puts "wck: #{directory}: read: Is a directory"
-  end
-end
-
-def make_total(lines, words, sizes)
-  [lines, words, sizes].map(&:sum)
-end
-
-def make_max_length(lines, words, sizes)
-  [lines, words, sizes].map(&:sum).map do |sum|
-    sum.to_s.length
-  end.max
-end
-
-def make_form_indexes(values_length)
-  0.upto(values_length - 1).to_a
+def total(line: false, word: false, size: false)
+  line_total = ARGV.map { |path| File.read(path).lines.count }.sum if line
+  word_total = ARGV.map { |path| File.read(path).split(/\s+/).count }.sum if word
+  size_total = ARGV.map { |path| File.read(path).bytesize }.sum if size
+  [line_total, word_total, size_total]
 end
 
 main
