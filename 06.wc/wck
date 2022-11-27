@@ -22,8 +22,8 @@ def main
   end
 end
 
-def conversion_values(options, stdin_read_or_paths) # 必要なオプションの値を代入
-  lines = option_l(stdin_read_or_paths) if options['l']
+def conversion_values(options, stdin_read_or_paths)
+  lines = option_l(stdin_read_or_paths) if options['l'] # 必要なオプションの値を代入
   words = option_w(stdin_read_or_paths) if options['w']
   sizes = option_c(stdin_read_or_paths) if options['c']
   [lines, words, sizes]
@@ -38,7 +38,7 @@ def option_w(stdin_read_or_paths)
 end
 
 def option_c(stdin_read_or_paths)
-  stdin_read_or_paths.map { |path| path.bytesize }
+  stdin_read_or_paths.map(&:bytesize)
 end
 
 def stdin_form(lines, words, sizes)
