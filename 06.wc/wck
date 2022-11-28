@@ -2,59 +2,51 @@
 # frozen_string_literal: true
 
 require 'optparse'
-require 'debug' # debugger
 
 def main
   options = ARGV.getopts('lwc')
   options = { 'l' => true, 'w' => true, 'c' => true } if options.values.none?
+  file_names = ARGV
 
-  if ARGV.empty?
-    stdin_read = $stdin.read
-    lines, words, sizes = conversion_values(options, stdin_read)
+  input_contents = file_names.empty? ? [$stdin.read] : file_names.map { |path| File.read(path) }
+  lines, words, sizes = run_wc(options, input_contents)
 
-    puts stdin_form(lines, words, sizes)
-  else
-    lines, words, sizes = ARGV.map { |path| conversion_values(options, File.read(path)) }.transpose # File.read(path) はファイルの中身の文字列
-
-    puts paths_form(lines, words, sizes)
-    puts total(line: options['l'], word: options['w'], size: options['c']) if ARGV.length > 1
-  end
+  puts build_form(lines, words, sizes, file_names)
+  puts "#{total(line: options['l'], word: options['w'], size: options['c'], file_names:)}    total" if file_names.length > 1
 end
 
-def conversion_values(options, stdin_read_or_paths)
-  lines = option_l(stdin_read_or_paths) if options['l'] # 必要なオプションの値を代入
-  words = option_w(stdin_read_or_paths) if options['w']
-  sizes = option_c(stdin_read_or_paths) if options['c']
+def run_wc(options, input_contents)
+  lines = count_lines(input_contents) if options['l'] # 必要なオプションの値を代入
+  words = count_words(input_contents) if options['w']
+  sizes = count_bytesize(input_contents) if options['c']
   [lines, words, sizes]
 end
 
-def option_l(stdin_read_or_paths)
-  stdin_read_or_paths.lines.count # stdin_read_or_paths はファイルの中身の文字列
+def count_lines(input_contents)
+  input_contents.map { |path| path.lines.count } # stdin_read_or_file_names はファイルの中身の文字列
 end
 
-def option_w(stdin_read_or_paths)
-  stdin_read_or_paths.split(/\s+/).count
+def count_words(input_contents)
+  input_contents.map { |path| path.split(/\s+/).count }
 end
 
-def option_c(stdin_read_or_paths)
-  stdin_read_or_paths.bytesize
+def count_bytesize(input_contents)
+  input_contents.map(&:bytesize)
 end
 
-def stdin_form(lines, words, sizes)
-  [lines, words, sizes].compact.join(' ' * 4)
-end
-
-def paths_form(lines, words, sizes)
-  transposed = [lines, words, sizes, ARGV].compact.transpose
-  transposed.map do |row|
-    row.join(' ' * 4)
+def build_form(lines, words, sizes, file_names)
+  if file_names.empty?
+    [lines, words, sizes].compact.join(' ' * 4)
+  else
+    transposed = [lines, words, sizes, file_names].compact.transpose
+    transposed.map { |row| row.join(' ' * 4) }
   end
 end
 
-def total(line: false, word: false, size: false)
-  line_total = ARGV.map { |path| File.read(path).lines.count }.sum if line
-  word_total = ARGV.map { |path| File.read(path).split(/\s+/).count }.sum if word
-  size_total = ARGV.map { |path| File.read(path).bytesize }.sum if size
+def total(line: false, word: false, size: false, file_names:)
+  line_total = file_names.map { |path| File.read(path).lines.count }.sum if line
+  word_total = file_names.map { |path| File.read(path).split(/\s+/).count }.sum if word
+  size_total = file_names.map { |path| File.read(path).bytesize }.sum if size
   [line_total, word_total, size_total].compact.join(' ' * 4)
 end
 
