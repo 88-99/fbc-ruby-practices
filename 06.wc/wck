@@ -12,7 +12,7 @@ def main
   lines, words, sizes = run_wc(options, input_contents)
 
   puts build_form(lines, words, sizes, file_names)
-  puts "#{total(line: options['l'], word: options['w'], size: options['c'], file_names:)}    total" if file_names.length > 1
+  puts "#{total(line: options['l'], word: options['w'], size: options['c'], input_contents:)}    total" if file_names.length > 1
 end
 
 def run_wc(options, input_contents)
@@ -43,10 +43,10 @@ def build_form(lines, words, sizes, file_names)
   end
 end
 
-def total(line: false, word: false, size: false, file_names:)
-  line_total = file_names.map { |path| File.read(path).lines.count }.sum if line
-  word_total = file_names.map { |path| File.read(path).split(/\s+/).count }.sum if word
-  size_total = file_names.map { |path| File.read(path).bytesize }.sum if size
+def total(line: false, word: false, size: false, input_contents:)
+  line_total = input_contents.map{ |ic| ic.lines.count }.sum if line
+  word_total = input_contents.map{ |ic| ic.split(/\s+/).count }.sum if word
+  size_total = input_contents.map{ |ic| ic.bytesize }.sum if size
   [line_total, word_total, size_total].compact.join(' ' * 4)
 end
 
