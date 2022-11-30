@@ -10,9 +10,9 @@ def main
 
   input_contents = file_names.empty? ? [$stdin.read] : file_names.map { |path| File.read(path) }
   lines, words, sizes = run_wc(options, input_contents)
-
-  puts build_form(lines, words, sizes, file_names)
-  puts "#{make_total(input_contents, line: options['l'], word: options['w'], size: options['c'])}    total" if file_names.length > 1
+  
+  puts build_form(lines, words, sizes, file_names, options, input_contents)
+  puts "#{make_total(line: options['l'], word: options['w'], size: options['c'], input_contents:)}    total" if file_names.length > 1
 end
 
 def run_wc(options, input_contents)
@@ -40,7 +40,7 @@ def stdin_form(lines, words, sizes)
   [lines, words, sizes].compact.join(' ' * 4)
 end
 
-def build_form(lines, words, sizes, file_names)
+def build_form(lines, words, sizes, file_names, options, input_contents)
   if file_names.empty?
     [lines, words, sizes].compact.join(' ' * 4)
   else
@@ -51,18 +51,18 @@ def build_form(lines, words, sizes, file_names)
   end
 end
 
-def make_total(input_contents, line: false, word: false, size: false)
-  line_total = input_contents.map { |ic| ic.lines.count }.sum if line
-  word_total = input_contents.map { |ic| ic.split(/\s+/).count }.sum if word
-  size_total = input_contents.map(&:bytesize).sum if size
+def make_total(line: false, word: false, size: false, input_contents:)
+  line_total = input_contents.map{ |ic| ic.lines.count }.sum if line
+  word_total = input_contents.map{ |ic| ic.split(/\s+/).count }.sum if word
+  size_total = input_contents.map{ |ic| ic.bytesize }.sum if size
   [line_total, word_total, size_total].compact.join(' ' * 4)
 end
 
 def make_wc_sum_length(input_contents)
   {
-    line: input_contents.map { |ic| ic.lines.count }.sum.to_s.length,
-    word: input_contents.map { |ic| ic.split(/\s+/).count }.sum.to_s.length,
-    size: input_contents.map(&:bytesize).sum.to_s.length
+    line: input_contents.map{ |ic| ic.lines.count }.sum.to_s.length,
+    word: input_contents.map{ |ic| ic.split(/\s+/).count }.sum.to_s.length,
+    size: input_contents.map{ |ic| ic.bytesize }.sum.to_s.length
   }
 end
 
