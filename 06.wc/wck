@@ -37,12 +37,8 @@ def count_bytesize(input_contents, wc_sum_length)
 end
 
 def build_form(lines, words, sizes, file_names)
-  if file_names.empty?
-    [lines, words, sizes].compact.join(' ' * 4)
-  else
-    transposed = [lines, words, sizes, file_names].compact.transpose
-    transposed.map { |row| row.join(' ' * 4) }
-  end
+  transposed = [lines, words, sizes, file_names].compact.delete_if(&:empty?).transpose
+  transposed.map { |row| row.join(' ' * 4) }
 end
 
 def make_total(input_contents, line: false, word: false, size: false)
