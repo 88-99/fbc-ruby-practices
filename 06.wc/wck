@@ -36,18 +36,12 @@ def count_bytesize(input_contents, wc_sum_length)
   input_contents.map { |path| path.bytesize.to_s.rjust(wc_sum_length[:size]) }
 end
 
-def stdin_form(lines, words, sizes)
-  [lines, words, sizes].compact.join(' ' * 4)
-end
-
 def build_form(lines, words, sizes, file_names)
   if file_names.empty?
     [lines, words, sizes].compact.join(' ' * 4)
   else
     transposed = [lines, words, sizes, file_names].compact.transpose
-    transposed.map do |row|
-      row.join(' ' * 4)
-    end
+    transposed.map { |row| row.join(' ' * 4) }
   end
 end
 
