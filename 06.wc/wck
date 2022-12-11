@@ -1,0 +1,59 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'optparse'
+
+def main
+  options = ARGV.getopts('lwc')
+  options = { 'l' => true, 'w' => true, 'c' => true } if options.values.none?
+  file_names = ARGV
+
+  input_contents = file_names.empty? ? [$stdin.read] : file_names.map { |path| File.read(path) }
+  lines, words, sizes = run_wc(options, input_contents)
+
+  puts build_form(lines, words, sizes, file_names)
+  puts "#{make_total(input_contents, line: options['l'], word: options['w'], size: options['c'])}    total" if file_names.length > 1
+end
+
+def run_wc(options, input_contents)
+  wc_sum_length = make_wc_sum_length(input_contents)
+
+  lines = count_lines(input_contents, wc_sum_length) if options['l'] # 必要なオプションの値を代入
+  words = count_words(input_contents, wc_sum_length) if options['w']
+  sizes = count_bytesize(input_contents, wc_sum_length) if options['c']
+  [lines, words, sizes]
+end
+
+def count_lines(input_contents, wc_sum_length)
+  input_contents.map { |path| path.lines.count.to_s.rjust(wc_sum_length[:line]) }
+end
+
+def count_words(input_contents, wc_sum_length)
+  input_contents.map { |path| path.split(/\s+/).count.to_s.rjust(wc_sum_length[:word]) }
+end
+
+def count_bytesize(input_contents, wc_sum_length)
+  input_contents.map { |path| path.bytesize.to_s.rjust(wc_sum_length[:size]) }
+end
+
+def build_form(lines, words, sizes, file_names)
+  transposed = [lines, words, sizes, file_names].compact.delete_if(&:empty?).transpose
+  transposed.map { |row| row.join(' ' * 4) }
+end
+
+def make_total(input_contents, line: false, word: false, size: false)
+  line_total = input_contents.map { |ic| ic.lines.count }.sum if line
+  word_total = input_contents.map { |ic| ic.split(/\s+/).count }.sum if word
+  size_total = input_contents.map(&:bytesize).sum if size
+  [line_total, word_total, size_total].compact.join(' ' * 4)
+end
+
+def make_wc_sum_length(input_contents)
+  {
+    line: input_contents.map { |ic| ic.lines.count }.sum.to_s.length,
+    word: input_contents.map { |ic| ic.split(/\s+/).count }.sum.to_s.length,
+    size: input_contents.map(&:bytesize).sum.to_s.length
+  }
+end
+
+main
