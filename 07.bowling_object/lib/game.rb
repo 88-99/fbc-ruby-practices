@@ -6,7 +6,6 @@ class Game < Frame
   attr_reader :scores
 
   def initialize(scores)
-    super()
     @scores = scores
   end
 
