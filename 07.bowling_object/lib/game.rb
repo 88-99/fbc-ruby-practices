@@ -2,20 +2,23 @@
 
 require_relative 'frame'
 
-class Game < Frame
+class Game
   attr_reader :scores
 
   def initialize(scores)
     @scores = scores
   end
 
-  def calc_shots
-    scores = @scores.split(',')
+  def split_scores
+    @scores.split(',')
+  end
+
+  def convert_splits_to_shots
     shots = []
-    scores.each do |s|
+    split_scores.each do |s|
       if s == 'X'
         shots << Shot.new(s).score
-        shots << Shot.new(nil).score
+        shots << Shot.new(0).score
       else
         shots << Shot.new(s).score
       end
@@ -23,21 +26,19 @@ class Game < Frame
     shots
   end
 
-  def build_frames(shots)
+  def remove_zero_in_strike
     frames = []
-    shots.each_slice(2) { |s| frames << s }
+    convert_splits_to_shots.each_slice(2) { |s| frames << s }
     frames.each { |frame| frame.delete(0) if frame == [10, 0] }
-    frames = frames.map.each_with_index do |frame, index|
-      Frame.new(index, frames, *frame)
+  end
+
+  def shots_score_to_frames
+    remove_zero_in_strike.map.each_with_index do |frame, index|
+      Frame.new(index, remove_zero_in_strike, *frame)
     end
   end
 
-  def calc_total_score(game, shots, frames)
-    [shots.sum, game.calc_strikes(frames).sum, game.calc_spares(frames).sum].sum
+  def calc_total_score(shots, total_strike, total_spare)
+    puts [shots.sum, total_strike, total_spare].sum
   end
-
-  game = Game.new(ARGV[0])
-  shots = game.calc_shots
-  frames = game.build_frames(shots)
-  p game.calc_total_score(game, shots, frames)
 end
