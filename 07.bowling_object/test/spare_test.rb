@@ -10,7 +10,7 @@ class SpareTest < Minitest::Test
     assert_equal 25, Spare.new(frames).calc_total_spare
   end
 
-  def test_calc_total_with_zero_spare
+  def test_calc_total_spare_when_no_spare
     game = Game.new('6,3,9,0,0,3,8,1,7,0,X,7,1,8,0,X,6,4,5')
     frames = game.create_frames_with_new
     assert_equal 0, Spare.new(frames).calc_total_spare
