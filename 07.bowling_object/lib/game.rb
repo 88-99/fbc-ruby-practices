@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require_relative 'frame'
+require_relative 'strike'
+require_relative 'spare'
 
 class Game
   attr_reader :scores
@@ -13,7 +15,7 @@ class Game
     @scores.split(',')
   end
 
-  def convert_splits_to_shots
+  def convert_scores_to_shots
     shots = []
     split_scores.each do |s|
       if s == 'X'
@@ -26,19 +28,21 @@ class Game
     shots
   end
 
-  def remove_zero_in_strike
-    frames = []
-    convert_splits_to_shots.each_slice(2) { |s| frames << s }
-    frames.each { |frame| frame.delete(0) if frame == [10, 0] }
+  def slice_into_frames
+    convert_scores_to_shots.each_slice(2).to_a
   end
 
-  def shots_score_to_frames
+  def remove_zero_in_strike
+    slice_into_frames.each { |frame| frame.delete(0) if frame == [10, 0] }
+  end
+
+  def create_frames_with_new
     remove_zero_in_strike.map.each_with_index do |frame, index|
       Frame.new(index, remove_zero_in_strike, *frame)
     end
   end
 
   def calc_total_score(shots, total_strike, total_spare)
-    puts [shots.sum, total_strike, total_spare].sum
+    [shots.sum, total_strike, total_spare].sum
   end
 end

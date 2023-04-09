@@ -5,25 +5,29 @@ require_relative '../lib/game'
 
 class GameTest < Minitest::Test
   def setup
-    # @game = Game.new('6,3,9,0,0,3,8,2,7,3,X,9,1,8,0,X,X,0,0')
-    @game = Game.new(ARGV[0])
-    @shots = @game.calc_shots
-    @frames = @game.build_frames(@shots)
+    @game = Game.new('6,3,9,0,0,3,8,2,7,3,X,9,1,8,0,X,6,4,5')
   end
 
-  def test_total_shots
-    assert_equal 89, @game.calc_shots.sum
+  def test_split_scores
+    assert_equal %w[6 3 9 0 0 3 8 2 7 3 X 9 1 8 0 X 6 4 5], @game.split_scores
   end
 
-  def test_total_strikes
-    assert_equal 20, @game.calc_strikes(@frames).sum
+  def test_convert_scores_to_shots
+    assert_equal [6, 3, 9, 0, 0, 3, 8, 2, 7, 3, 10, 0, 9, 1, 8, 0, 10, 0, 6, 4, 5], @game.convert_scores_to_shots
   end
 
-  def test_total_spares
-    assert_equal 25, @game.calc_spares(@frames).sum
+  def test_remove_zero_in_strike
+    @game.convert_scores_to_shots
+
+    assert_equal [[6, 3], [9, 0], [0, 3], [8, 2], [7, 3], [10], [9, 1], [8, 0], [10], [6, 4], [5]], @game.remove_zero_in_strike
   end
 
-  def test_total_scores
-    assert_equal 134, @game.calc_total_score(@game, @shots, @frames)
+  def test_calc_total_score
+    shots = @game.convert_scores_to_shots
+    frames = @game.create_frames_with_new
+    total_strike = Strike.new(frames).calc_total_strike
+    total_spare = Spare.new(frames).calc_total_spare
+
+    assert_equal 139, @game.calc_total_score(shots, total_strike, total_spare)
   end
 end
