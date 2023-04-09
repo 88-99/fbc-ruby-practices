@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require_relative 'game'
-
 class Strike
   attr_reader :frames
 
