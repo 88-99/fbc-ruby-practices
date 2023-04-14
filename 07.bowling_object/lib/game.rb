@@ -5,14 +5,8 @@ require_relative 'strike'
 require_relative 'spare'
 
 class Game
-  attr_reader :scores
-
-  def initialize(scores)
-    @scores = scores
-  end
-
   def split_scores
-    @scores.split(',')
+    ARGV[0].split(',')
   end
 
   def convert_scores_to_shots
