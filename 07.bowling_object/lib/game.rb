@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require_relative 'frame'
-require_relative 'strike'
-require_relative 'spare'
 
 class Game
   def split_scores
@@ -34,6 +32,14 @@ class Game
     remove_zero_in_strike.map.each_with_index do |frame, index|
       Frame.new(index, remove_zero_in_strike, *frame)
     end
+  end
+
+  def calc_total_strike(frames)
+    Frame.calc_total_strike(frames)
+  end
+
+  def calc_total_spare(frames)
+    Frame.calc_total_spare(frames)
   end
 
   def calc_total_score(shots, total_strike, total_spare)
