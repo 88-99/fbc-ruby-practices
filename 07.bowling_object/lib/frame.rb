@@ -27,7 +27,7 @@ class Frame
   def self.calc_total_spare(frames)
     spares = []
     frames.first(9).each do |fr|
-      spares << fr.next_frame[0] if [fr.first_shot.mark, fr.second_shot.mark].compact.sum == 10 && !fr.second_shot.mark.nil?
+      spares << fr.next_frame[0] if [fr.first_shot.mark, fr.second_shot.mark].compact.sum == 10 && !fr.second_shot.mark.zero?
     end
     spares.sum
   end

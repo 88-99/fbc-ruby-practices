@@ -17,12 +17,6 @@ class GameTest < Minitest::Test
     assert_equal [6, 3, 9, 0, 0, 3, 8, 2, 7, 3, 10, 0, 9, 1, 8, 0, 10, 0, 6, 4, 5], @game.convert_scores_to_shots
   end
 
-  def test_remove_zero_in_strike
-    @game.convert_scores_to_shots
-
-    assert_equal [[6, 3], [9, 0], [0, 3], [8, 2], [7, 3], [10], [9, 1], [8, 0], [10], [6, 4], [5]], @game.remove_zero_in_strike
-  end
-
   def test_calc_total_score
     shots = @game.convert_scores_to_shots
     frames = @game.create_frames_with_new

@@ -24,13 +24,9 @@ class Game
     convert_scores_to_shots.each_slice(2).to_a
   end
 
-  def remove_zero_in_strike
-    slice_into_frames.each { |frame| frame.delete(0) if frame == [10, 0] }
-  end
-
   def create_frames_with_new
-    remove_zero_in_strike.map.each_with_index do |frame, index|
-      Frame.new(index, remove_zero_in_strike, *frame)
+    slice_into_frames.map.each_with_index do |frame, index|
+      Frame.new(index, slice_into_frames, *frame)
     end
   end
 
