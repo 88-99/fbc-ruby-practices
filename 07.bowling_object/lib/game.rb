@@ -3,6 +3,12 @@
 require_relative 'frame'
 
 class Game
+  def call_calc_total_score
+    calc_total_score
+  end
+
+  private
+
   def split_scores
     ARGV[0].split(',')
   end
@@ -38,7 +44,10 @@ class Game
     Frame.calc_total_spare(frames)
   end
 
-  def calc_total_score(shots, total_strike, total_spare)
-    [shots.sum, total_strike, total_spare].sum
+  def calc_total_score
+    [convert_scores_to_shots.sum, calc_total_strike(create_frames_with_new), calc_total_spare(create_frames_with_new)].sum
   end
 end
+
+game = Game.new
+p game.call_calc_total_score
