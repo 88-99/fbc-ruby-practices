@@ -17,10 +17,10 @@ class Game
     shots = []
     split_scores.each do |s|
       if s == 'X'
-        shots << Shot.new(s).score
-        shots << Shot.new(0).score
+        shots << Shot.new(s)
+        shots << Shot.new(0)
       else
-        shots << Shot.new(s).score
+        shots << Shot.new(s)
       end
     end
     shots
@@ -36,6 +36,10 @@ class Game
     end
   end
 
+  def calc_total_shots
+    convert_scores_to_shots.map(&:score).sum
+  end
+
   def calc_total_strike(frames)
     Frame.calc_total_strike(frames)
   end
@@ -45,7 +49,7 @@ class Game
   end
 
   def calc_total_score
-    [convert_scores_to_shots.sum, calc_total_strike(create_frames_with_new), calc_total_spare(create_frames_with_new)].sum
+    [calc_total_shots, calc_total_strike(create_frames_with_new), calc_total_spare(create_frames_with_new)].sum
   end
 end
 
