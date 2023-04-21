@@ -12,12 +12,16 @@ class Frame
     @after_next_frame = frames[index + 2]
   end
 
+  def strike?
+    @first_shot&.score == 10
+  end
+
   def self.calc_total_strike(frames)
     strikes = []
     frames.first(9).each do |fr|
-      if fr.first_shot.score == 10 && fr.next_frame[0].score == 10
+      if fr.strike? && fr.next_frame[0].score == 10
         strikes << [fr.next_frame[0].score, fr.after_next_frame[0].score].sum
-      elsif fr.first_shot.score == 10
+      elsif fr.strike?
         strikes << fr.next_frame.map(&:score).sum
       end
     end
