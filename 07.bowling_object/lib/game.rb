@@ -7,6 +7,8 @@ class Game
     calc_total_score
   end
 
+  private
+
   def split_scores
     ARGV[0].split(',')
   end
@@ -33,27 +35,34 @@ class Game
       Frame.new(*frame)
     end
   end
+
+  def calc_total_strike(frames)
+    strikes = []
+    frames.first(9).each_with_index do |frame, i|
+      next unless frame.strike?
+
+      strikes << frames[i + 1].first_shot.score
+      strikes << if frames[i + 1].strike?
+                   frames[i + 2].first_shot.score
+                 else
+                   frames[i + 1].second_shot.score
+                 end
+    end
+    strikes.sum
+  end
+
+  def calc_total_spare(frames)
+    spares = []
+    frames.first(9).each_with_index do |frame, i|
+      spares << frames[i + 1].first_shot.score if frame.spare?
+    end
+    spares.sum
+  end
+
+  def calc_total_score
+    p [convert_scores_to_shots.map(&:score).sum, calc_total_strike(create_frames_with_new), calc_total_spare(create_frames_with_new)].sum
+  end
 end
 
 game = Game.new
-
-strikes = []
-frames = game.create_frames_with_new
-frames.first(9).each_with_index do |frame, i|
-  next unless frame.strike?
-
-  strikes << frames[i + 1].first_shot.score
-  strikes << if frames[i + 1].strike?
-               frames[i + 2].first_shot.score
-             else
-               frames[i + 1].second_shot.score
-             end
-end
-
-spares = []
-frames = game.create_frames_with_new
-frames.first(9).each_with_index do |frame, i|
-  spares << frames[i + 1].first_shot.score if frame.spare?
-end
-
-p [game.convert_scores_to_shots.map(&:score).sum, strikes.sum, spares.sum].sum
+game.call_calc_total_score
