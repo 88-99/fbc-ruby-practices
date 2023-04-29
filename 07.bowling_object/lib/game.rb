@@ -3,8 +3,14 @@
 require_relative 'frame'
 
 class Game
-  def call_calc_total_score
-    calc_total_score
+  def initialize
+    @frames = create_frames_with_new
+  end
+
+  def score
+    @frames.first(10).each_with_index.sum do |frame, index|
+      frame.score(@frames[index + 1], @frames[index + 2])
+    end
   end
 
   private
@@ -35,19 +41,7 @@ class Game
       Frame.new(*frame)
     end
   end
-
-  def calc_total_strike(frames)
-    Frame.calc_total_strike(frames)
-  end
-
-  def calc_total_spare(frames)
-    Frame.calc_total_spare(frames)
-  end
-
-  def calc_total_score
-    p [convert_scores_to_shots.map(&:score).sum, calc_total_strike(create_frames_with_new), calc_total_spare(create_frames_with_new)].sum
-  end
 end
 
 game = Game.new
-game.call_calc_total_score
+p game.score
