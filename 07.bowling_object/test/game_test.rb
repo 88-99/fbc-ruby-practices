@@ -9,20 +9,27 @@ class GameTest < Minitest::Test
     @game = Game.new
   end
 
+  def test_score
+    assert_equal 139, @game.score
+  end
+
   def test_split_scores
-    assert_equal %w[6 3 9 0 0 3 8 2 7 3 X 9 1 8 0 X 6 4 5], @game.split_scores
+    assert_equal %w[6 3 9 0 0 3 8 2 7 3 X 9 1 8 0 X 6 4 5], @game.send(:split_scores)
   end
 
   def test_convert_scores_to_shots
-    assert_equal [6, 3, 9, 0, 0, 3, 8, 2, 7, 3, 10, 0, 9, 1, 8, 0, 10, 0, 6, 4, 5], @game.convert_scores_to_shots
+    ARGV.replace(['2,3,X,6,4'])
+    @game = Game.new
+    shots = @game.send(:convert_scores_to_shots)
+
+    assert [Shot.new('2'), Shot.new('3'), Shot.new('10'), Shot.new('0'), Shot.new('6'), Shot.new('4')], shots
   end
 
-  def test_calc_total_score
-    shots = @game.convert_scores_to_shots
-    frames = @game.create_frames_with_new
-    total_strike = @game.calc_total_strike(frames)
-    total_spare = @game.calc_total_spare(frames)
+  def test_slice_into_frames
+    ARGV.replace(['X,X,6,4'])
+    @game = Game.new
+    frames = @game.send(:slice_into_frames)
 
-    assert_equal 139, @game.calc_total_score(shots, total_strike, total_spare)
+    assert [[Shot.new('10'), Shot.new('0')], [Shot.new('10'), Shot.new('0')], [Shot.new('6'), Shot.new('4')]], frames
   end
 end
