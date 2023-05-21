@@ -3,38 +3,16 @@
 require 'etc'
 
 class FileItem
-  def initialize(file_list)
-    @paths = get_absolute_paths(file_list)
+  attr_reader :filename
+
+  def initialize(filename)
+    @filename = filename
+    path = "#{Dir.getwd}/#{@filename}"
+    @file_stat = File.stat(path)
   end
 
-  def get_absolute_paths(file_list)
-    file_list.map { |filename| "#{Dir.getwd}/#{filename}" }
-  end
-
-  def calc_total_file_blocks
-    "total #{@paths.map { |path| File.stat(path).blocks }.sum}"
-  end
-
-  def build_row_l_option
-    file_nlinks = @paths.map { |path| File.stat(path).nlink }
-    file_sizes = @paths.map { |path| File.stat(path).size }
-
-    @paths.map do |path|
-      stat = File.stat(path)
-      row = "#{build_permission(stat)}  "
-      row += "#{stat.nlink.to_s.rjust(file_nlinks.max.to_s.length)} "
-      row += "#{Etc.getpwuid(File.stat(path).uid).name}  "
-      row += "#{Etc.getgrgid(File.stat(path).gid).name}  "
-      row += "#{stat.size.to_s.rjust(file_sizes.max.to_s.length)} "
-      row += "#{stat.mtime.month.to_s.rjust(2)} "
-      row += "#{stat.mtime.day.to_s.rjust(2)} "
-      row += "#{stat.mtime.strftime('%H:%M')} "
-      row + File.basename(path)
-    end
-  end
-
-  def build_permission(stat)
-    permission_number = stat.mode.to_s(8)
+  def permission
+    permission_number = @file_stat.mode.to_s(8)
     permission_number.insert(0, '0') if permission_number.length == 5
     permission = file_type[permission_number.slice(0..1)]
     permission += file_mode[permission_number.slice(2..3)]
@@ -65,5 +43,41 @@ class FileItem
       '06' => 'rw-',
       '07' => 'rwx'
     }
+  end
+
+  def blocks
+    @file_stat.blocks
+  end
+
+  def nlink
+    @file_stat.nlink
+  end
+
+  def user_name
+    Etc.getpwuid(@file_stat.uid).name
+  end
+
+  def group_name
+    Etc.getgrgid(@file_stat.gid).name
+  end
+
+  def size
+    @file_stat.size
+  end
+
+  def mode
+    @file_stat.mode.to_s(8)
+  end
+
+  def last_update_month
+    @file_stat.mtime.month
+  end
+
+  def last_update_day
+    @file_stat.mtime.day
+  end
+
+  def last_update_time
+    @file_stat.mtime.strftime('%H:%M')
   end
 end
