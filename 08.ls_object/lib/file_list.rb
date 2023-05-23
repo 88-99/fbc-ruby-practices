@@ -6,29 +6,38 @@ require_relative 'file_item'
 NUMBER_OF_COLUMNS = 3
 
 class FileList
-  def initialize(options)
-    @options = options
+  attr_reader :filenames, :file_items
+
+  def initialize(option_all:, option_reverse:)
+    @option_all = option_all
+    @option_reverse = option_reverse
     @filenames = fetch_files
     @file_items = fetch_files.map { FileItem.new(_1) }
   end
 
   def fetch_files
-    filenames = @options[:option_all] ? Dir.glob('*', File::FNM_DOTMATCH) : Dir.glob('*')
-    filenames = filenames.reverse if @options[:option_reverse]
+    filenames = @option_all ? Dir.glob('*', File::FNM_DOTMATCH) : Dir.glob('*')
+    filenames = filenames.reverse if @option_reverse
     filenames
   end
 
-  def transpose_safely
-    quotient, remainder = @filenames.length.divmod(NUMBER_OF_COLUMNS)
-    if remainder != 0
-      (NUMBER_OF_COLUMNS - remainder).times { @filenames << nil }
-      @filenames.each_slice(quotient + 1).to_a.transpose
-    else
-      @filenames.each_slice(quotient).to_a.transpose
-    end
+  def calc_total_file_blocks
+    @file_items.map(&:blocks).sum
   end
 
-  def refer_file_items
-    @file_items
+  def make_nlinks
+    @file_items.map(&:nlink)
+  end
+
+  def make_sizes
+    @file_items.map(&:size)
+  end
+
+  def find_max_nlink
+    make_nlinks.max.to_s.length
+  end
+
+  def find_max_size
+    make_sizes.max.to_s.length
   end
 end

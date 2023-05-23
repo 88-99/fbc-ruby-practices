@@ -9,12 +9,12 @@ require_relative 'nomal_formatter'
 class Ls
   def main
     options = Option.new
-    filenames = FileList.new(option_all: options.option_all?, option_reverse: options.option_reverse?, option_long: options.option_long?)
-
+    file_list = FileList.new(option_all: options.option_all?, option_reverse: options.option_reverse?)
     formatter = if options.option_long?
-                  LongFomatter.new(filenames.refer_file_items).format
+                  LongFomatter.new(file_list.file_items, file_list.calc_total_file_blocks, file_list.find_max_nlink, file_list.find_max_size).format
                 else
-                  NomalFomatter.new(filenames.transpose_safely).format
+                  NomalFomatter.new(file_list.filenames).format
+                  # NomalFomatter.new(filenames.transpose_safely).format
                 end
 
     puts formatter

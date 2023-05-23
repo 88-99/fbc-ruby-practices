@@ -3,37 +3,28 @@
 require_relative 'file_item'
 
 class LongFomatter
-  def initialize(file_items)
+  def initialize(file_items, total_file_blocks, max_nlink, max_size)
     @file_items = file_items
+    @total_file_blocks = total_file_blocks
+    @max_nlink = max_nlink
+    @max_size = max_size
   end
 
   def format
-    ["total #{@file_items.map(&:blocks).sum}", build_row_long_option]
+    ["total #{@total_file_blocks}", build_row]
   end
 
-  def build_row_long_option
+  def build_row
     @file_items.map do |file_item|
       row =  "#{file_item.permission}  "
-      row += "#{file_item.nlink.to_s.rjust(find_max_value(build_nlinks))} "
+      row += "#{file_item.nlink.to_s.rjust(@max_nlink)} "
       row += "#{file_item.user_name}  "
       row += "#{file_item.group_name}  "
-      row += "#{file_item.size.to_s.rjust(find_max_value(build_sizes))} "
+      row += "#{file_item.size.to_s.rjust(@max_size)} "
       row += "#{file_item.last_update_month.to_s.rjust(2)} "
       row += "#{file_item.last_update_day.to_s.rjust(2)} "
       row += "#{file_item.last_update_time} "
       row +  file_item.filename
     end
-  end
-
-  def build_nlinks
-    @file_items.map(&:nlink)
-  end
-
-  def build_sizes
-    @file_items.map(&:size)
-  end
-
-  def find_max_value(array)
-    array.max.to_s.length
   end
 end
