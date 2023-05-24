@@ -11,10 +11,9 @@ class Ls
     options = Option.new
     file_list = FileList.new(option_all: options.option_all?, option_reverse: options.option_reverse?)
     formatter = if options.option_long?
-                  LongFomatter.new(file_list.file_items, file_list.calc_total_file_blocks, file_list.find_max_nlink, file_list.find_max_size).format
+                  LongFormatter.new(file_list).format
                 else
-                  NomalFomatter.new(file_list.filenames).format
-                  # NomalFomatter.new(filenames.transpose_safely).format
+                  NomalFormatter.new(file_list.filenames).format
                 end
 
     puts formatter
